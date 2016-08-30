@@ -1,4 +1,5 @@
 Orders a set of numbers delimited by newline (\n).
+
 Source code offers insight on parallelism with Pthreads.
 
 To build: 
