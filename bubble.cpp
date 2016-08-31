@@ -8,27 +8,27 @@
 
 using namespace std;
 
-extern sim_semaphore create_sim_sem(int) ;
-extern void wait_sem (sim_semaphore) ;
-extern void signal_sem (sim_semaphore) ;
+extern sim_semaphore create_sim_sem(int);
+extern void wait_sem (sim_semaphore);
+extern void signal_sem (sim_semaphore);
 extern long random(void);
 
-pthread_mutex_t stdoutLock ;
+pthread_mutex_t stdoutLock;
 sim_semaphore reading; //for reading of cell data
 sim_semaphore org[NUM_CELLS]; //for comparisons of cell data
-int  cell[NUM_CELLS] ;
-pthread_t thr[NUM_CELLS] ;
-int checking = 0 ;
+int  cell[NUM_CELLS];
+pthread_t thr[NUM_CELLS];
+int checking = 0;
 
 struct threadIdType
 {
-  int id ;
+  int id;
 };
 
 void init()
 {
   if ( 0!=pthread_mutex_init(&stdoutLock, NULL) )
-  {  cout << "MUTEX INITIALIZATION FAILURE!" << endl ;
+  {  cout << "MUTEX INITIALIZATION FAILURE!" << endl;
    exit(-1) ;}
   for (int i = 0; i < NUM_CELLS; i++)
     org[i] = create_sim_sem(1); //cells available for comparisons
@@ -38,8 +38,8 @@ void init()
 
 void * child (void * idPtr)
 {
-  int m_delay, j ;
-  int me = ((threadIdType *) (idPtr))->id, temp ;
+  int m_delay, j;
+  int me = ((threadIdType *) (idPtr))->id, temp;
   do
   {
     wait_sem(org[me]);
@@ -47,58 +47,59 @@ void * child (void * idPtr)
     wait_sem(reading);
     if (cell[me-1] > cell[me])
     {
-      temp = cell[me-1] ;
-      cell[me-1] = cell[me] ;
-      m_delay = (int) random()%100 ;
+      temp = cell[me-1];
+      cell[me-1] = cell[me];
+      m_delay = (int) random()%100;
       for (j=0; j<m_delay; j++) sched_yield();
-      cell[me] = temp ;
+      cell[me] = temp;
     }
     signal_sem(reading);
     signal_sem(org[me-1]);
     signal_sem(org[me]); //last semaphore layer
-  } while (true) ;
-  pthread_exit ((void *)0) ;
+  } while (true);
+  pthread_exit ((void *)0);
 }
 
 void mother()
 {
   int i;
-  threadIdType * idPtr ;
+  threadIdType * idPtr;
   for (i = 1; i < NUM_CELLS ; i++)
   {
-    idPtr = new threadIdType ;
-    idPtr->id = i ;
+    idPtr = new threadIdType;
+    idPtr->id = i;
     if ( 0!=pthread_create(&thr[i], NULL, child, (void *) idPtr) )
-    {  cout << "THREAD CREATION FAILURE!" << endl ;
+    {  cout << "THREAD CREATION FAILURE!" << endl;
      exit(-1) ; }
     if (0!=pthread_detach(thr[i]))
-    {  cout << "THREAD DETACHMENT FAILURE!" << endl ;
+    {  cout << "THREAD DETACHMENT FAILURE!" << endl;
      exit(-1) ;}
   }
-  bool sorted ;
+  bool sorted;
   int m_delay, j;
   do
   {
-    sorted = true ;
+    sorted = true;
     wait_sem(reading); //wait in case comparison is being made
     for (i=1; i<NUM_CELLS; i++)
     {
-      if (cell[i-1] > cell[i]) sorted = false ;
+      if (cell[i-1] > cell[i]) sorted = false;
       m_delay = (int) random()%100;
       for (j=0; j<m_delay; j++) sched_yield();
       signal_sem(reading); //resume comparison if needed
     }
-  } while (!sorted) ;
-  for (i=0; i<NUM_CELLS; i++) cout << cell[i] << endl ;
+  } while (!sorted);
+  for (i=0; i<NUM_CELLS; i++) cout << endl << cell[i];
 }
 
 int main()
 {
   init();
-  int idx ;
-  for (idx=0; idx<NUM_CELLS; idx++)  cin >> cell[idx] ;
-  for (idx=0; idx<NUM_CELLS; idx++)  cout << cell[idx]
-  cout << endl ;
+  int idx;
+  for (idx=0; idx<NUM_CELLS; idx++)  cin >> cell[idx];
+  for (idx=0; idx<NUM_CELLS; idx++)  cout << endl << cell[idx];
+  cout << endl; 
   mother();
-  return 0 ;
+  cout << endl << endl;
+  return 0;
 }
