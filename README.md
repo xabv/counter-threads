@@ -1,7 +1,7 @@
-Sort numbers delimited by newline.
-Source code offers insight on parallelism with Pthreads.
+###Sort numbers delimited by newline.
+####Source code offers insight on parallelism with Pthreads.
 
-To build:
+####To build:
 ```
 git clone https://github.com/xabv/counter-threads.git
 cd counter-threads
